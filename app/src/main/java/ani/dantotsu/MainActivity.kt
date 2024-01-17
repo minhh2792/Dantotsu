@@ -14,7 +14,6 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.view.WindowManager
 import android.view.animation.AnticipateInterpolator
 import android.widget.TextView
 import androidx.activity.addCallback
@@ -45,6 +44,7 @@ import ani.dantotsu.home.NoInternet
 import ani.dantotsu.media.MediaDetailsActivity
 import ani.dantotsu.others.CustomBottomDialog
 import ani.dantotsu.others.LangSet
+import ani.dantotsu.others.SharedPreferenceBooleanLiveData
 import ani.dantotsu.settings.UserInterfaceSettings
 import ani.dantotsu.subcriptions.Subscription.Companion.startSubscription
 import ani.dantotsu.themes.ThemeManager
@@ -61,6 +61,7 @@ import java.io.Serializable
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private lateinit var incognitoLiveData: SharedPreferenceBooleanLiveData
     private val scope = lifecycleScope
     private var load = false
 
@@ -73,6 +74,9 @@ class MainActivity : AppCompatActivity() {
         LangSet.setLocale(this)
         super.onCreate(savedInstanceState)
 
+        //get FRAGMENT_CLASS_NAME from intent
+        val FRAGMENT_CLASS_NAME = intent.getStringExtra("FRAGMENT_CLASS_NAME")
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -81,17 +85,52 @@ class MainActivity : AppCompatActivity() {
 
             val backgroundDrawable = _bottomBar.background as GradientDrawable
             val currentColor = backgroundDrawable.color?.defaultColor ?: 0
-            val semiTransparentColor = (currentColor and 0x00FFFFFF) or 0xE8000000.toInt()
+            val semiTransparentColor = (currentColor and 0x00FFFFFF) or 0xF9000000.toInt()
             backgroundDrawable.setColor(semiTransparentColor)
             _bottomBar.background = backgroundDrawable
         }
-        val colorOverflow = this.getSharedPreferences("Dantotsu", Context.MODE_PRIVATE)
-            .getBoolean("colorOverflow", false)
+        val sharedPreferences = getSharedPreferences("Dantotsu", Context.MODE_PRIVATE)
+        val colorOverflow = sharedPreferences.getBoolean("colorOverflow", false)
         if (!colorOverflow) {
             _bottomBar.background = ContextCompat.getDrawable(this, R.drawable.bottom_nav_gray)
 
         }
 
+        val layoutParams = binding.incognitoTextView.layoutParams as ViewGroup.MarginLayoutParams
+        layoutParams.topMargin = 11 * statusBarHeight / 12
+        binding.incognitoTextView.layoutParams = layoutParams
+        incognitoLiveData = SharedPreferenceBooleanLiveData(
+            sharedPreferences,
+            "incognito",
+            false
+        )
+        incognitoLiveData.observe(this) {
+            if (it) {
+                val slideDownAnim = ObjectAnimator.ofFloat(
+                    binding.incognitoTextView,
+                    View.TRANSLATION_Y,
+                    -(binding.incognitoTextView.height.toFloat() + statusBarHeight),
+                    0f
+                )
+                slideDownAnim.duration = 200
+                slideDownAnim.start()
+                binding.incognitoTextView.visibility = View.VISIBLE
+            } else {
+                val slideUpAnim = ObjectAnimator.ofFloat(
+                    binding.incognitoTextView,
+                    View.TRANSLATION_Y,
+                    0f,
+                    -(binding.incognitoTextView.height.toFloat() + statusBarHeight)
+                )
+                slideUpAnim.duration = 200
+                slideUpAnim.start()
+                //wait for animation to finish
+                Handler(Looper.getMainLooper()).postDelayed(
+                    { binding.incognitoTextView.visibility = View.GONE },
+                    200
+                )
+            }
+        }
         incognitoNotification(this)
 
         var doubleBackToExitPressedOnce = false
@@ -151,11 +190,19 @@ class MainActivity : AppCompatActivity() {
         binding.root.doOnAttach {
             initActivity(this)
             uiSettings = loadData("ui_settings") ?: uiSettings
-            selectedOption = uiSettings.defaultStartUpTab
-            if (!uiSettings.immersiveMode) {
-                binding.includedNavbar.navbarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
-                    bottomMargin = navBarHeight
+            selectedOption = if (FRAGMENT_CLASS_NAME != null) {
+                when (FRAGMENT_CLASS_NAME) {
+                    AnimeFragment::class.java.name -> 0
+                    HomeFragment::class.java.name -> 1
+                    MangaFragment::class.java.name -> 2
+                    else -> 1
                 }
+            } else {
+                    uiSettings.defaultStartUpTab
+                }
+            binding.includedNavbar.navbarContainer.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                bottomMargin = navBarHeight
+
             }
         }
         val offline = getSharedPreferences("Dantotsu", Context.MODE_PRIVATE)
@@ -259,6 +306,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        //TODO: Remove this
         GlobalScope.launch(Dispatchers.IO) {
             val index = Helper.downloadManager(this@MainActivity).downloadIndex
             val downloadCursor = index.getDownloads()

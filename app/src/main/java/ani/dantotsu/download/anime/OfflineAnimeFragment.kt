@@ -93,7 +93,7 @@ class OfflineAnimeFragment : Fragment(), OfflineAnimeSearchListener {
         val animeUserAvatar = view.findViewById<ShapeableImageView>(R.id.offlineMangaUserAvatar)
         animeUserAvatar.setSafeOnClickListener {
             val dialogFragment =
-                SettingsDialogFragment.newInstance2(SettingsDialogFragment.Companion.PageType2.OfflineANIME)
+                SettingsDialogFragment.newInstance(SettingsDialogFragment.Companion.PageType.OfflineANIME)
             dialogFragment.show((it.context as AppCompatActivity).supportFragmentManager, "dialog")
         }
         if (!uiSettings.immersiveMode) {
@@ -187,9 +187,9 @@ class OfflineAnimeFragment : Fragment(), OfflineAnimeSearchListener {
             val media =
                 downloadManager.animeDownloadedTypes.firstOrNull { it.title == item.title }
             media?.let {
+                MediaDetailsActivity.mediaSingleton = getMedia(it)
                 startActivity(
                     Intent(requireContext(), MediaDetailsActivity::class.java)
-                        .putExtra("media", getMedia(it))
                         .putExtra("download", true)
                 )
             } ?: run {
@@ -211,6 +211,9 @@ class OfflineAnimeFragment : Fragment(), OfflineAnimeSearchListener {
                 downloadManager.removeMedia(item.title, type)
                 val mediaIds = requireContext().getSharedPreferences(getString(R.string.anime_downloads), Context.MODE_PRIVATE)
                     ?.all?.filter { it.key.contains(item.title) }?.values ?: emptySet()
+                if (mediaIds.isEmpty()) {
+                    snackString("No media found")  // if this happens, terrible things have happened
+                }
                 for (mediaId in mediaIds) {
                     ani.dantotsu.download.video.Helper.downloadManager(requireContext())
                         .removeDownload(mediaId.toString())

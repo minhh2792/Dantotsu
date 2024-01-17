@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.DatePickerDialog
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -46,6 +47,7 @@ import ani.dantotsu.databinding.ItemCountDownBinding
 import ani.dantotsu.media.Media
 import ani.dantotsu.parsers.ShowResponse
 import ani.dantotsu.settings.UserInterfaceSettings
+import ani.dantotsu.subcriptions.NotificationClickReceiver
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.model.GlideUrl
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
@@ -157,22 +159,11 @@ fun initActivity(a: Activity) {
                 }
         }
         a.hideStatusBar()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R &&
-            statusBarHeight == 0 &&
-            a.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-        ) {
-            window.setDecorFitsSystemWindows(false)
-
-            window.decorView.setOnApplyWindowInsetsListener { _, insets ->
-                statusBarHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
-                navBarHeight = insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
-                insets
-            }
-
-            window.insetsController?.let { controller ->
-                controller.systemBarsBehavior =
-                    WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                controller.hide(WindowInsetsCompat.Type.navigationBars())
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && statusBarHeight == 0 && a.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            window.decorView.rootWindowInsets?.displayCutout?.apply {
+                if (boundingRects.size > 0) {
+                    statusBarHeight = min(boundingRects[0].width(), boundingRects[0].height())
+                }
             }
         }
     } else
@@ -952,20 +943,26 @@ fun checkCountry(context: Context): Boolean {
         else -> false
     }
 }
+
+const val INCOGNITO_CHANNEL_ID = 26
+@SuppressLint("LaunchActivityFromNotification")
 fun incognitoNotification(context: Context){
-    val CHANNEL_ID = 26
     val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val incognito = context.getSharedPreferences("Dantotsu", Context.MODE_PRIVATE).getBoolean("incognito", false)
     if (incognito) {
+        val intent = Intent(context, NotificationClickReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(context, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE)
         val builder = NotificationCompat.Builder(context, Notifications.CHANNEL_INCOGNITO_MODE)
             .setSmallIcon(R.drawable.ic_incognito_24)
             .setContentTitle("Incognito Mode")
             .setContentText("Disable Incognito Mode")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(pendingIntent)
             .setOngoing(true)
-        notificationManager.notify(CHANNEL_ID, builder.build())
+        notificationManager.notify(INCOGNITO_CHANNEL_ID, builder.build())
     } else {
-        notificationManager.cancel(CHANNEL_ID)
+        notificationManager.cancel(INCOGNITO_CHANNEL_ID)
     }
 }
 

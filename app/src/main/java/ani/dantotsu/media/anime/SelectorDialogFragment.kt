@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.HapticFeedbackConstants
 import android.view.LayoutInflater
@@ -23,6 +24,7 @@ import ani.dantotsu.databinding.ItemUrlBinding
 import ani.dantotsu.download.video.Helper
 import ani.dantotsu.media.Media
 import ani.dantotsu.media.MediaDetailsViewModel
+import ani.dantotsu.others.Download.download
 import ani.dantotsu.parsers.VideoExtractor
 import ani.dantotsu.parsers.VideoType
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +32,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.text.DecimalFormat
+
 
 class SelectorDialogFragment : BottomSheetDialogFragment() {
     private var _binding: BottomSheetSelectorBinding? = null
@@ -42,6 +45,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
     private var makeDefault = false
     private var selected: String? = null
     private var launch: Boolean? = null
+    private var isDownloadMenu: Boolean? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +53,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
             selected = it.getString("server")
             launch = it.getBoolean("launch", true)
             prevEpisode = it.getString("prev")
+            isDownloadMenu = it.getBoolean("isDownload")
         }
     }
 
@@ -76,8 +81,11 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
                 val ep = media?.anime?.episodes?.get(media?.anime?.selectedEpisode)
                 episode = ep
                 if (ep != null) {
+                    if (isDownloadMenu == true) {
+                        binding.selectorMakeDefault.visibility = View.GONE
+                    }
 
-                    if (selected != null) {
+                    if (selected != null && isDownloadMenu == false) {
                         binding.selectorListContainer.visibility = View.GONE
                         binding.selectorAutoListContainer.visibility = View.VISIBLE
                         binding.selectorAutoText.text = selected
@@ -95,7 +103,12 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
 
                         fun load() {
                             val size =
-                                ep.extractors?.find { it.server.name == selected }?.videos?.size
+                                if (model.watchSources!!.isDownloadedSource(media!!.selected!!.sourceIndex)) {
+                                    ep.extractors?.firstOrNull()?.videos?.size
+                                } else {
+                                    ep.extractors?.find { it.server.name == selected }?.videos?.size
+                                }
+
                             if (size != null && size >= media!!.selected!!.video) {
                                 media!!.anime!!.episodes?.get(media!!.anime!!.selectedEpisode!!)?.selectedExtractor =
                                     selected
@@ -145,6 +158,9 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
                             ep.extractorCallback = {
                                 scope.launch {
                                     adapter.add(it)
+                                    if (model.watchSources!!.isDownloadedSource(media?.selected!!.sourceIndex)) {
+                                        adapter.perfromClick(0)
+                                    }
                                 }
                             }
                             model.getEpisode().observe(this) {
@@ -164,6 +180,9 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
                         } else {
                             media!!.anime?.episodes?.set(media!!.anime?.selectedEpisode!!, ep)
                             adapter.addAll(ep.extractors)
+                            if (model.watchSources!!.isDownloadedSource(media?.selected!!.sourceIndex)) {
+                                adapter.perfromClick(0)
+                            }
                             binding.selectorProgressBar.visibility = View.GONE
                         }
                     }
@@ -179,7 +198,7 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
         prevEpisode = null
 
         dismiss()
-        if (launch!!) {
+        if (launch!! || model.watchSources!!.isDownloadedSource(media.selected!!.sourceIndex)) {
             stopAddingToList()
             val intent = Intent(activity, ExoplayerView::class.java)
             ExoplayerView.media = media
@@ -236,6 +255,14 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
             notifyItemRangeInserted(0, extractors.size)
         }
 
+        fun perfromClick(position: Int) {
+            val extractor = links[position]
+            media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]?.selectedExtractor =
+                extractor.server.name
+            media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]?.selectedVideo = 0
+            startExoplayer(media!!)
+        }
+
         private inner class StreamViewHolder(val binding: ItemStreamBinding) :
             RecyclerView.ViewHolder(binding.root)
     }
@@ -257,29 +284,24 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
         override fun onBindViewHolder(holder: UrlViewHolder, position: Int) {
             val binding = holder.binding
             val video = extractor.videos[position]
-            //binding.urlQuality.text =
-            //    if (video.quality != null) "${video.quality}p" else "Default Quality"
-            //binding.urlNote.text = video.extraNote ?: ""
-            //binding.urlNote.visibility = if (video.extraNote != null) View.VISIBLE else View.GONE
-            binding.urlDownload.visibility = View.VISIBLE
+            if (isDownloadMenu == true) {
+                binding.urlDownload.visibility = View.VISIBLE
+            } else {
+                binding.urlDownload.visibility = View.GONE
+            }
             binding.urlDownload.setSafeOnClickListener {
                 media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedExtractor =
                     extractor.server.name
                 media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!.selectedVideo =
                     position
                 binding.urlDownload.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                //download(
-                //    requireActivity(),
-                //    media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!,
-                //    media!!.userPreferredName
-                //)
                 val episode = media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!
                 val video =
                     if (extractor.videos.size > episode.selectedVideo) extractor.videos[episode.selectedVideo] else null
                 if (video != null) {
                     Helper.startAnimeDownloadService(
                         requireActivity(),
-                        media!!.nameMAL ?: media!!.nameRomaji,
+                        media!!.mainName(),
                         episode.number,
                         video,
                         null,
@@ -289,6 +311,16 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
                 }
                 dismiss()
             }
+            binding.urlDownload.setOnLongClickListener {
+                if ((loadData<Int>("settings_download_manager") ?: 0) != 0) {
+                    download(
+                        requireActivity(),
+                        media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]!!,
+                        media!!.userPreferredName
+                    )
+                }
+                true
+            }
             if (video.format == VideoType.CONTAINER) {
                 binding.urlSize.visibility = if (video.size != null) View.VISIBLE else View.GONE
                 binding.urlSize.text =
@@ -296,10 +328,6 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
                     (if (video.extraNote != null) " : " else "") + (if (video.size == 0.0) "Unknown Size" else (DecimalFormat(
                         "#.##"
                     ).format(video.size ?: 0).toString() + " MB"))
-            } else {
-                if ((loadData<Int>("settings_download_manager") ?: 0) == 0) {
-                    ////binding.urlDownload.visibility = View.GONE
-                }
             }
             binding.urlNote.visibility = View.VISIBLE
             binding.urlNote.text = video.format.name
@@ -312,6 +340,10 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
             RecyclerView.ViewHolder(binding.root) {
             init {
                 itemView.setSafeOnClickListener {
+                    if (isDownloadMenu == true) {
+                        binding.urlDownload.performClick()
+                        return@setSafeOnClickListener
+                    }
                     tryWith(true) {
                         media!!.anime!!.episodes!![media!!.anime!!.selectedEpisode!!]?.selectedExtractor =
                             extractor.server.name
@@ -343,13 +375,15 @@ class SelectorDialogFragment : BottomSheetDialogFragment() {
         fun newInstance(
             server: String? = null,
             la: Boolean = true,
-            prev: String? = null
+            prev: String? = null,
+            isDownload: Boolean
         ): SelectorDialogFragment =
             SelectorDialogFragment().apply {
                 arguments = Bundle().apply {
                     putString("server", server)
                     putBoolean("launch", la)
                     putString("prev", prev)
+                    putBoolean("isDownload", isDownload)
                 }
             }
     }
