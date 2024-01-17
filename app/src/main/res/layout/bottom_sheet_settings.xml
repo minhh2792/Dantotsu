@@ -141,9 +141,9 @@
            android:layout_width="160dp"
            android:layout_height="140dp"
            android:layout_centerHorizontal="true"
-           android:clickable="true"
            android:src="@drawable/ic_round_download_24"
            android:layout_marginTop="10dp"
+           android:clickable="true"
            android:scaleType="centerInside"
            style="@style/neumorph_button"/>
 
