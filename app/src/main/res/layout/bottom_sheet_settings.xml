@@ -141,6 +141,7 @@
            android:layout_width="160dp"
            android:layout_height="140dp"
            android:layout_centerHorizontal="true"
+           android:clickable="true"
            android:src="@drawable/ic_round_download_24"
            android:layout_marginTop="10dp"
            android:scaleType="centerInside"
@@ -152,7 +153,8 @@
            android:layout_below="@id/myButton"
            android:layout_centerHorizontal="true"
            android:text="@string/downloads"
-           android:fontFamily="@font/poppins_bold"/>
+           android:fontFamily="@font/poppins_bold"
+           android:translationY="-40dp"/>
         </RelativeLayout>
        
        	</LinearLayout>
