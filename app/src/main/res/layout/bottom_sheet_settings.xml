@@ -128,6 +128,7 @@
             android:layout_height="140dp">
      		 
       		<soup.neumorphism.NeumorphImageButton
+      		    android:id="@+id/myButton1"
          			android:layout_width="160dp"
          			android:layout_height="140dp"
          			android:src="@drawable/ic_incognito_24"
@@ -139,11 +140,11 @@
         <TextView
            android:layout_width="wrap_content"
            android:layout_height="wrap_content"
-           android:layout_below="@id/myButton"
+           android:layout_below="@id/myButton1"
            android:layout_centerHorizontal="true"
            android:text="@string/incognito_mode"
            android:fontFamily="@font/poppins_bold"
-           android:translationY="-50dp"/>
+           android:translationY="-45dp"/>
         </RelativeLayout>
      
      		<RelativeLayout
@@ -168,7 +169,7 @@
            android:layout_centerHorizontal="true"
            android:text="@string/downloads"
            android:fontFamily="@font/poppins_bold"
-           android:translationY="-50dp"/>
+           android:translationY="-45dp"/>
         </RelativeLayout>
        
        	</LinearLayout>
