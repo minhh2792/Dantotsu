@@ -129,11 +129,6 @@
        			android:src="@drawable/ic_round_person_24"
        			android:scaleType="centerInside"/>
      
-     		<android.view.View
-       			android:layout_width="wrap_content"
-       			android:layout_height="match_parent"
-       			android:padding="5dp" />
-     
      		<soup.neumorphism.NeumorphImageButton
        			android:layout_width="160dp"
        			android:layout_height="140dp"
