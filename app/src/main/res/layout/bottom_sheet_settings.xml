@@ -117,6 +117,33 @@
             app:thumbTint="@color/button_switch_track"
             android:checked="false"/>
 
+       	<LinearLayout
+         		android:layout_width="match_parent"
+         		android:layout_height="match_parent"
+         		android:orientation="horizontal"
+         		android:gravity="center">
+       
+     		<ImageButton
+       			android:layout_width="160dp"
+       			android:layout_height="140dp"
+       			android:src="@drawable/ic_round_person_24"
+       			android:scaleType="centerInside"/>
+     
+     		<android.view.View
+       			android:layout_width="wrap_content"
+       			android:layout_height="match_parent"
+       			android:padding="5dp" />
+     
+     		<soup.neumorphism.NeumorphImageButton
+       			android:layout_width="160dp"
+       			android:layout_height="140dp"
+       			android:src="@drawable/ic_round_download_24"
+       			android:fontFamily="@font/poppins_bold"
+       			android:text="@string/downloads"
+       			android:scaleType="centerInside"/>
+       
+       	</LinearLayout>
+
         <Button
             android:id="@+id/image_search"
             style="@style/Widget.Material3.Button.TextButton"
