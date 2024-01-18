@@ -94,9 +94,7 @@
                     android:focusable="true"
                     android:scaleType="centerInside"
                     app:neumorph_shadowElevation="3dp"
-                    style="@style/Widget.Neumorph.ImageButton"
-                    app:neumorph_shadowColorLight="?attr/colorInverseSurface"
-                    app:neumorph_shadowColorDark="?attr/colorOnSurface"/>
+                    style="@style/neumorph_button"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -126,8 +124,6 @@
                     android:scaleType="centerInside"
                     app:neumorph_shadowElevation="3dp"
                     style="@style/neumorph_button"
-                    app:neumorph_shadowColorLight="?attr/colorInverseSurface"
-                    app:neumorph_shadowColorDark="?attr/colorOnSurface"
                     app:neumorph_shapeType="pressed"/>
 
                 <TextView
