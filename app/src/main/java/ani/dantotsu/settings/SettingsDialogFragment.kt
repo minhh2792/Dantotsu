@@ -178,6 +178,7 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
                         .start()
                         }
             offline()
+         }
     }
     fun offline() {
         when (pageType) {
@@ -248,4 +249,3 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
         }
     }
   }
-}
