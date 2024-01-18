@@ -161,6 +161,7 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
                         .start()
             offline()
         }
+     }
         binding.download2.setOnClickListener {
             context?.getSharedPreferences("Dantotsu", Context.MODE_PRIVATE)?.edit()
                 ?.putBoolean("offlineMode", false)?.apply()
@@ -246,4 +247,5 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
             return fragment
         }
     }
+  }
 }
