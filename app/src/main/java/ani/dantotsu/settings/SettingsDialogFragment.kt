@@ -89,14 +89,14 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
             incognitoNotification(requireContext())
             binding.incognitoView1.animate()
                 .alpha(0f)
-                .setDuration(300)
+                .setDuration(100)
                 .withEndAction {
                     binding.incognitoView1.visibility = View.GONE
                     binding.incognitoView2.alpha = 0f
                     binding.incognitoView2.visibility = View.VISIBLE
                     binding.incognitoView2.animate()
                         .alpha(1f)
-                        .setDuration(300)
+                        .setDuration(100)
                         .start()
                 }
                 .start()
@@ -107,14 +107,14 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
             incognitoNotification(requireContext())
             binding.incognitoView2.animate()
                 .alpha(0f)
-                .setDuration(300)
+                .setDuration(100)
                 .withEndAction {
                     binding.incognitoView2.visibility = View.GONE
                     binding.incognitoView1.alpha = 0f
                     binding.incognitoView1.visibility = View.VISIBLE
                     binding.incognitoView1.animate()
                         .alpha(1f)
-                        .setDuration(300)
+                        .setDuration(100)
                         .start()
                 }
                 .start()
@@ -148,15 +148,33 @@ class SettingsDialogFragment : BottomSheetDialogFragment() {
         binding.download1.setOnClickListener {
             context?.getSharedPreferences("Dantotsu", Context.MODE_PRIVATE)?.edit()
                 ?.putBoolean("offlineMode", true)?.apply()
+                    binding.downloadview1.animate()
+                .alpha(0f)
+                .setDuration(100)
+                .withEndAction {
                     binding.downloadview1.visibility = View.GONE
+                    binding.downloadview2.alpha = 0f
                     binding.downloadview2.visibility = View.VISIBLE
+                    binding.downloadview2.animate()
+                        .alpha(1f)
+                        .setDuration(100)
+                        .start()
             offline()
         }
         binding.download2.setOnClickListener {
             context?.getSharedPreferences("Dantotsu", Context.MODE_PRIVATE)?.edit()
                 ?.putBoolean("offlineMode", false)?.apply()
+                    binding.downloadview1.animate()
+                .alpha(0f)
+                .setDuration(100)
+                .withEndAction {
                     binding.downloadview2.visibility = View.GONE
+                    binding.downloadview1.alpha = 0f
                     binding.downloadview1.visibility = View.VISIBLE
+                    binding.downloadview1.animate()
+                        .alpha(1f)
+                        .setDuration(100)
+                        .start()
             offline()
         }
     }
