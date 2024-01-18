@@ -156,7 +156,7 @@
                    android:layout_width="wrap_content"
                    android:layout_height="wrap_content"
                    android:layout_gravity="center"
-                   android:text="@string/downloads"
+                   android:text="@string/offline_mode"
                    android:textColor="?attr/colorOnBackground"
                    android:fontFamily="@font/poppins_bold"
                    android:layout_marginTop="-44dp"/>
@@ -184,7 +184,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:text="@string/downloads"
+                    android:text="@string/offline_mode"
                     android:textColor="@color/light_blue_600"
                     android:fontFamily="@font/poppins_bold"
                     android:layout_marginTop="-44dp"/>
