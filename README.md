@@ -1,4 +1,4 @@
-<p align="center">
+<p align="center"> 
    <img src="https://pbxt.replicate.delivery/2PX94viD6lJSDVayQrGyDH7CGu7IjQ6e8HEtOGDeelefXRdOC/out.png" alt="Dantotsu Banner" width=100% >
 </p>
 <p align="center">
